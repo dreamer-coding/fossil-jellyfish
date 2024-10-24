@@ -77,6 +77,9 @@ fossil_jellyfish_network_t* fossil_jellyfish_create_network(int32_t num_layers, 
             layer->deltas = (double*)calloc(neurons_per_layer[i], sizeof(double));
 
             if (layer->weights == NULL || layer->biases == NULL || layer->deltas == NULL) {
+                free(layer->weights);
+                free(layer->biases);
+                free(layer->deltas);
                 fossil_jellyfish_free_network(network);
                 return NULL; // Memory allocation failed
             }
@@ -88,6 +91,10 @@ fossil_jellyfish_network_t* fossil_jellyfish_create_network(int32_t num_layers, 
 
         layer->outputs = (double*)calloc(neurons_per_layer[i], sizeof(double));
         if (layer->outputs == NULL) {
+            free(layer->weights);
+            free(layer->biases);
+            free(layer->deltas);
+            free(layer);
             fossil_jellyfish_free_network(network);
             return NULL; // Memory allocation failed
         }
