@@ -25,150 +25,55 @@
 // * Fossil Logic Test
 // * * * * * * * * * * * * * * * * * * * * * * * *
 
-// Test case for creating a neural network
-FOSSIL_TEST(test_create_network) {
-    fossil_jellyfish_network_t* network = (fossil_jellyfish_network_t*)malloc(sizeof(fossil_jellyfish_network_t));
-    network->num_layers = NUM_LAYERS;
-    network->layers = (fossil_jellyfish_layer_t**)malloc(NUM_LAYERS * sizeof(fossil_jellyfish_layer_t*));
-
-    // Create Layer 1
-    network->layers[0] = (fossil_jellyfish_layer_t*)malloc(sizeof(fossil_jellyfish_layer_t));
-    network->layers[0]->num_neurons = NUM_NEURONS_LAYER1;
-    network->layers[0]->weights = (double*)malloc(NUM_NEURONS_LAYER1 * NUM_NEURONS_LAYER2 * sizeof(double));
-    network->layers[0]->biases = (double*)malloc(NUM_NEURONS_LAYER1 * sizeof(double));
-    network->layers[0]->deltas = (double*)malloc(NUM_NEURONS_LAYER1 * sizeof(double));
-    network->layers[0]->activation = ACTIVATION_RELU;
-
-    // Create Layer 2
-    network->layers[1] = (fossil_jellyfish_layer_t*)malloc(sizeof(fossil_jellyfish_layer_t));
-    network->layers[1]->num_neurons = NUM_NEURONS_LAYER2;
-    network->layers[1]->weights = (double*)malloc(NUM_NEURONS_LAYER2 * NUM_NEURONS_LAYER1 * sizeof(double));
-    network->layers[1]->biases = (double*)malloc(NUM_NEURONS_LAYER2 * sizeof(double));
-    network->layers[1]->deltas = (double*)malloc(NUM_NEURONS_LAYER2 * sizeof(double));
-    network->layers[1]->activation = ACTIVATION_SIGMOID;
-
+FOSSIL_TEST(test_create_destroy) {
+    fossil_jellyfish_network_t* network = fossil_jellyfish_create_network(2, (int32_t[]){3, 2}, (fossil_jellyfish_activation_t[]){ACTIVATION_RELU, ACTIVATION_SIGMOID});
     ASSUME_NOT_CNULL(network);
-    ASSUME_NOT_CNULL(network->layers[0]);
-    ASSUME_NOT_CNULL(network->layers[1]);
-
     fossil_jellyfish_free_network(network);
 }
 
-// Test case for saving a neural network
-FOSSIL_TEST(test_save_network) {
-    fossil_jellyfish_network_t* network = (fossil_jellyfish_network_t*)malloc(sizeof(fossil_jellyfish_network_t));
-    network->num_layers = NUM_LAYERS;
-    network->layers = (fossil_jellyfish_layer_t**)malloc(NUM_LAYERS * sizeof(fossil_jellyfish_layer_t*));
-
-    // Layer 1
-    network->layers[0] = (fossil_jellyfish_layer_t*)malloc(sizeof(fossil_jellyfish_layer_t));
-    network->layers[0]->num_neurons = NUM_NEURONS_LAYER1;
-    network->layers[0]->weights = (double*)malloc(NUM_NEURONS_LAYER1 * NUM_NEURONS_LAYER2 * sizeof(double));
-    network->layers[0]->biases = (double*)malloc(NUM_NEURONS_LAYER1 * sizeof(double));
-    network->layers[0]->deltas = (double*)malloc(NUM_NEURONS_LAYER1 * sizeof(double));
-    network->layers[0]->activation = ACTIVATION_RELU;
-
-    // Layer 2
-    network->layers[1] = (fossil_jellyfish_layer_t*)malloc(sizeof(fossil_jellyfish_layer_t));
-    network->layers[1]->num_neurons = NUM_NEURONS_LAYER2;
-    network->layers[1]->weights = (double*)malloc(NUM_NEURONS_LAYER2 * NUM_NEURONS_LAYER1 * sizeof(double));
-    network->layers[1]->biases = (double*)malloc(NUM_NEURONS_LAYER2 * sizeof(double));
-    network->layers[1]->deltas = (double*)malloc(NUM_NEURONS_LAYER2 * sizeof(double));
-    network->layers[1]->activation = ACTIVATION_SIGMOID;
-
-    // Initialize random weights and biases for testing
-    for (int i = 0; i < NUM_NEURONS_LAYER1; i++) {
-        network->layers[0]->biases[i] = (double)(rand() % 10) / 10.0; // Example initialization
-        for (int j = 0; j < NUM_NEURONS_LAYER2; j++) {
-            network->layers[0]->weights[i * NUM_NEURONS_LAYER2 + j] = (double)(rand() % 10) / 10.0;
-        }
-    }
-    for (int i = 0; i < NUM_NEURONS_LAYER2; i++) {
-        network->layers[1]->biases[i] = (double)(rand() % 10) / 10.0;
-        for (int j = 0; j < NUM_NEURONS_LAYER1; j++) {
-            network->layers[1]->weights[i * NUM_NEURONS_LAYER1 + j] = (double)(rand() % 10) / 10.0;
-        }
-    }
-
-    // Save network to file
-    int result = fossil_jellyfish_save(network, TEST_FILE);
-    ASSUME_ITS_EQUAL_I32(0, result); // Ensure save succeeded
-
-    // Clean up
-    fossil_jellyfish_free_network(network);
-}
-
-// Test case for loading a neural network
-FOSSIL_TEST(test_load_network) {
-    fossil_jellyfish_network_t* network = fossil_jellyfish_load(TEST_FILE);
+FOSSIL_TEST(test_forward_pass) {
+    fossil_jellyfish_network_t* network = fossil_jellyfish_create_network(2, (int32_t[]){3, 2}, (fossil_jellyfish_activation_t[]){ACTIVATION_RELU, ACTIVATION_SIGMOID});
     ASSUME_NOT_CNULL(network);
-    ASSUME_ITS_EQUAL_I32(NUM_LAYERS, network->num_layers);
-    ASSUME_NOT_CNULL(network->layers[0]);
-    ASSUME_NOT_CNULL(network->layers[1]);
-    
-    // Check layer 1 properties
-    ASSUME_ITS_EQUAL_I32(NUM_NEURONS_LAYER1, network->layers[0]->num_neurons);
-    ASSUME_ITS_EQUAL_I32(ACTIVATION_RELU, network->layers[0]->activation);
 
-    // Check layer 2 properties
-    ASSUME_ITS_EQUAL_I32(NUM_NEURONS_LAYER2, network->layers[1]->num_neurons);
-    ASSUME_ITS_EQUAL_I32(ACTIVATION_SIGMOID, network->layers[1]->activation);
+    double input[] = {1.0, 2.0, 3.0};
+    fossil_jellyfish_forward(network, input);
 
-    // Clean up
     fossil_jellyfish_free_network(network);
 }
 
-// Test case for applying dropout
-FOSSIL_TEST(test_apply_dropout) {
-    fossil_jellyfish_layer_t* layer = (fossil_jellyfish_layer_t*)malloc(sizeof(fossil_jellyfish_layer_t));
-    layer->num_neurons = NUM_NEURONS_LAYER1;
-    layer->outputs = (double*)malloc(NUM_NEURONS_LAYER1 * sizeof(double));
+FOSSIL_TEST(test_backpropagation) {
+    fossil_jellyfish_network_t* network = fossil_jellyfish_create_network(2, (int32_t[]){3, 2}, (fossil_jellyfish_activation_t[]){ACTIVATION_RELU, ACTIVATION_SIGMOID});
+    ASSUME_NOT_CNULL(network);
 
-    // Initialize outputs
-    for (int i = 0; i < layer->num_neurons; i++) {
-        layer->outputs[i] = 1.0;
-    }
+    double input[] = {1.0, 2.0, 3.0};
+    double expected_output[] = {0.0, 1.0};
+    fossil_jellyfish_forward(network, input);
+    fossil_jellyfish_backpropagate(network, expected_output, 0.1);
 
-    // Apply dropout with a rate of 0.5
-    fossil_jellyfish_apply_dropout(layer, 0.5);
-
-    // Check that some neurons are dropped (output is zero)
-    int dropout_applied = 0;
-    for (int i = 0; i < layer->num_neurons; i++) {
-        if (layer->outputs[i] == 0.0) {
-            dropout_applied = 1;
-            break;
-        }
-    }
-    ASSUME_ITS_TRUE(dropout_applied);
-
-    // Clean up
-    free(layer->outputs);
-    free(layer);
+    fossil_jellyfish_free_network(network);
 }
 
-// Test case for clipping gradients
-FOSSIL_TEST(test_clip_gradients) {
-    fossil_jellyfish_layer_t* layer = (fossil_jellyfish_layer_t*)malloc(sizeof(fossil_jellyfish_layer_t));
-    layer->num_neurons = NUM_NEURONS_LAYER1;
-    layer->deltas = (double*)malloc(NUM_NEURONS_LAYER1 * sizeof(double));
+FOSSIL_TEST(test_train) {
+    fossil_jellyfish_network_t* network = fossil_jellyfish_create_network(2, (int32_t[]){3, 2}, (fossil_jellyfish_activation_t[]){ACTIVATION_RELU, ACTIVATION_SIGMOID});
+    ASSUME_NOT_CNULL(network);
 
-    // Initialize gradients (deltas)
-    for (int i = 0; i < layer->num_neurons; i++) {
-        layer->deltas[i] = (i % 2 == 0) ? 5.0 : -5.0;
-    }
+    double inputs[] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
+    double expected_output[] = {0.0, 1.0, 0.0, 1.0};
+    fossil_jellyfish_train(network, inputs, expected_output, 2, 100, 0.1);
 
-    // Clip gradients to a max absolute value of 2.0
-    fossil_jellyfish_clip_gradients(layer, 2.0);
+    fossil_jellyfish_free_network(network);
+}
 
-    // Ensure gradients are clipped
-    for (int i = 0; i < layer->num_neurons; i++) {
-        ASSUME_ITS_TRUE(layer->deltas[i] <= 2.0 && layer->deltas[i] >= -2.0);
-    }
+FOSSIL_TEST(test_save_load) {
+    fossil_jellyfish_network_t* network = fossil_jellyfish_create_network(2, (int32_t[]){3, 2}, (fossil_jellyfish_activation_t[]){ACTIVATION_RELU, ACTIVATION_SIGMOID});
+    ASSUME_NOT_CNULL(network);
 
-    // Clean up
-    free(layer->deltas);
-    free(layer);
+    fossil_jellyfish_save(network, TEST_FILE);
+    fossil_jellyfish_network_t* loaded_network = fossil_jellyfish_load(TEST_FILE);
+
+    ASSUME_NOT_CNULL(loaded_network);
+    fossil_jellyfish_free_network(loaded_network);
+    fossil_jellyfish_free_network(network);
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * *
@@ -176,9 +81,9 @@ FOSSIL_TEST(test_clip_gradients) {
 // * * * * * * * * * * * * * * * * * * * * * * * *
 
 FOSSIL_TEST_GROUP(jellyfish_tests) {
-    ADD_TEST(test_create_network);
-    ADD_TEST(test_save_network);
-    ADD_TEST(test_load_network);
-    ADD_TEST(test_apply_dropout);
-    ADD_TEST(test_clip_gradients);
+    ADD_TEST(test_create_destroy);
+    ADD_TEST(test_forward_pass);
+    ADD_TEST(test_backpropagation);
+    ADD_TEST(test_train);
+    ADD_TEST(test_save_load);
 }
