@@ -24,28 +24,32 @@ extern "C" {
 
 // Activation functions
 typedef enum {
-    ACTIVATION_RELU,
-    ACTIVATION_SIGMOID,
-    ACTIVATION_TANH,
-    ACTIVATION_LEAKY_RELU,
-    ACTIVATION_SOFTMAX,
-    ACTIVATION_ELU
+    ACTIVATION_RELU,       // Rectified Linear Unit
+    ACTIVATION_SIGMOID,    // Sigmoid
+    ACTIVATION_TANH,       // Hyperbolic tangent
+    ACTIVATION_LEAKY_RELU, // Leaky ReLU with alpha = 0.01
+    ACTIVATION_SOFTMAX,    // Softmax is only used for the output layer
+    ACTIVATION_ELU         // Exponential Linear Unit
 } fossil_jellyfish_activation_t;
 
 // Neural network layer structure
 typedef struct {
-    int32_t num_neurons;
-    double* weights;  // Weight matrix
-    double* biases;   // Biases for each neuron
-    double* outputs;  // Output values after activation
-    double* deltas;   // Deltas used in backpropagation
-    fossil_jellyfish_activation_t activation;  // Activation function
+    int32_t num_neurons;        // Number of neurons in the layer
+    double* weights;            // Weight values for the layer
+    double* biases;             // Bias values for the layer
+    double* outputs;            // Output values for the layer
+    double* deltas;             // Error terms for backpropagation
+    fossil_jellyfish_activation_t activation; // Activation function for the layer
+    double dropout_rate;        // Dropout rate for regularization
+    double* normalized_outputs; // Batch normalization outputs
+    double* gamma;              // Scaling parameter for batch normalization
+    double* beta;               // Shifting parameter for batch normalization
 } fossil_jellyfish_layer_t;
 
 // Neural network structure
 typedef struct {
-    int32_t num_layers;
-    fossil_jellyfish_layer_t** layers;
+    int32_t num_layers;                // Number of layers in the network
+    fossil_jellyfish_layer_t** layers; // Array of pointers to the layers
 } fossil_jellyfish_network_t;
 
 // Function declarations
@@ -66,6 +70,48 @@ fossil_jellyfish_network_t* fossil_jellyfish_create_network(int32_t num_layers, 
  * @param network A pointer to the neural network to be freed.
  */
 void fossil_jellyfish_free_network(fossil_jellyfish_network_t* network);
+
+/**
+ * @brief Performs dropout on the given layer during training.
+ * 
+ * @param layer A pointer to the layer.
+ * @param dropout_rate The dropout rate (probability of dropping a neuron).
+ */
+void fossil_jellyfish_apply_dropout(fossil_jellyfish_layer_t* layer, double dropout_rate);
+
+/**
+ * @brief Applies batch normalization to the outputs of the layer.
+ * 
+ * @param layer A pointer to the layer.
+ */
+void fossil_jellyfish_apply_batch_normalization(fossil_jellyfish_layer_t* layer);
+
+/**
+ * @brief Calculates the Mean Squared Error (MSE) for the network's predictions.
+ * 
+ * @param network A pointer to the neural network.
+ * @param expected_output An array of expected output values.
+ * @return The calculated Mean Squared Error.
+ */
+double fossil_jellyfish_calculate_error(fossil_jellyfish_network_t* network, double* expected_output);
+
+/**
+ * @brief Updates the learning rate dynamically based on decay.
+ * 
+ * @param learning_rate The initial learning rate.
+ * @param epoch The current training epoch.
+ * @param decay_rate The rate at which the learning rate decays.
+ * @return The updated learning rate.
+ */
+double fossil_jellyfish_update_learning_rate(double learning_rate, int32_t epoch, double decay_rate);
+
+/**
+ * @brief Clips the gradients to avoid exploding gradients during backpropagation.
+ * 
+ * @param layer A pointer to the neural network layer.
+ * @param clip_value The threshold value for clipping.
+ */
+void fossil_jellyfish_clip_gradients(fossil_jellyfish_layer_t* layer, double clip_value);
 
 /**
  * @brief Performs a forward pass through the neural network with the given input.

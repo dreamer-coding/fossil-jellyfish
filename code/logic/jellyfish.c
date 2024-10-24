@@ -45,24 +45,52 @@ double fossil_jellyfish_activate_derivative(double value, fossil_jellyfish_activ
 
 // Creates a new neural network
 fossil_jellyfish_network_t* fossil_jellyfish_create_network(int32_t num_layers, int32_t* neurons_per_layer, fossil_jellyfish_activation_t* activations) {
+    if (num_layers <= 0 || neurons_per_layer == NULL || activations == NULL) {
+        return NULL; // Invalid input
+    }
+
     fossil_jellyfish_network_t* network = (fossil_jellyfish_network_t*)malloc(sizeof(fossil_jellyfish_network_t));
+    if (network == NULL) {
+        return NULL; // Memory allocation failed
+    }
+    
     network->num_layers = num_layers;
     network->layers = (fossil_jellyfish_layer_t**)malloc(num_layers * sizeof(fossil_jellyfish_layer_t*));
+    if (network->layers == NULL) {
+        free(network);
+        return NULL; // Memory allocation failed
+    }
 
     for (int32_t i = 0; i < num_layers; i++) {
         fossil_jellyfish_layer_t* layer = (fossil_jellyfish_layer_t*)malloc(sizeof(fossil_jellyfish_layer_t));
+        if (layer == NULL) {
+            fossil_jellyfish_free_network(network);
+            return NULL; // Memory allocation failed
+        }
+
         layer->num_neurons = neurons_per_layer[i];
         layer->activation = activations[i];
-        if (i > 0) {  // Skip the input layer
+
+        if (i > 0) {  // Skip weights and biases for the input layer
             layer->weights = (double*)malloc(neurons_per_layer[i] * neurons_per_layer[i-1] * sizeof(double));
             layer->biases = (double*)malloc(neurons_per_layer[i] * sizeof(double));
             layer->deltas = (double*)calloc(neurons_per_layer[i], sizeof(double));
+
+            if (layer->weights == NULL || layer->biases == NULL || layer->deltas == NULL) {
+                fossil_jellyfish_free_network(network);
+                return NULL; // Memory allocation failed
+            }
         } else {
             layer->weights = NULL;
             layer->biases = NULL;
             layer->deltas = NULL;
         }
+
         layer->outputs = (double*)calloc(neurons_per_layer[i], sizeof(double));
+        if (layer->outputs == NULL) {
+            fossil_jellyfish_free_network(network);
+            return NULL; // Memory allocation failed
+        }
 
         network->layers[i] = layer;
     }
@@ -72,15 +100,112 @@ fossil_jellyfish_network_t* fossil_jellyfish_create_network(int32_t num_layers, 
 
 // Frees up memory allocated for the network
 void fossil_jellyfish_free_network(fossil_jellyfish_network_t* network) {
+    if (network == NULL) return;
+
     for (int i = 0; i < network->num_layers; i++) {
         fossil_jellyfish_layer_t* layer = network->layers[i];
-        free(layer->biases);
-        free(layer->weights);
-        free(layer->deltas);
-        free(layer);
+        if (layer != NULL) {
+            free(layer->biases);
+            free(layer->weights);
+            free(layer->deltas);
+            free(layer->outputs); // Added free for outputs
+            free(layer);
+        }
     }
+    
     free(network->layers);
+    network->layers = NULL;
+    
     free(network);
+    network = NULL;
+}
+
+// Applies dropout to the layer during training
+void fossil_jellyfish_apply_dropout(fossil_jellyfish_layer_t* layer, double dropout_rate) {
+    if (!layer || dropout_rate < 0 || dropout_rate > 1) {
+        fprintf(stderr, "Invalid arguments to fossil_jellyfish_apply_dropout\n");
+        return;
+    }
+    for (int32_t i = 0; i < layer->num_neurons; i++) {
+        if ((double)rand() / RAND_MAX < dropout_rate) {
+            layer->outputs[i] = 0;
+        }
+    }
+}
+
+// Applies batch normalization to the outputs of the layer
+void fossil_jellyfish_apply_batch_normalization(fossil_jellyfish_layer_t* layer) {
+    if (!layer || !layer->outputs || !layer->normalized_outputs || !layer->gamma || !layer->beta) {
+        fprintf(stderr, "Invalid arguments to fossil_jellyfish_apply_batch_normalization\n");
+        return;
+    }
+
+    // Calculate the mean
+    double mean = 0;
+    for (int32_t i = 0; i < layer->num_neurons; i++) {
+        mean += layer->outputs[i];
+    }
+    mean /= layer->num_neurons;
+
+    // Calculate the variance
+    double variance = 0;
+    for (int32_t i = 0; i < layer->num_neurons; i++) {
+        variance += (layer->outputs[i] - mean) * (layer->outputs[i] - mean);
+    }
+    variance /= layer->num_neurons;
+
+    // Normalize the outputs
+    for (int32_t i = 0; i < layer->num_neurons; i++) {
+        layer->normalized_outputs[i] = (layer->outputs[i] - mean) / sqrt(variance + 1e-8);
+    }
+
+    // Scale and shift the normalized outputs
+    for (int32_t i = 0; i < layer->num_neurons; i++) {
+        layer->outputs[i] = layer->gamma[i] * layer->normalized_outputs[i] + layer->beta[i];
+    }
+}
+
+// Calculates the Mean Squared Error (MSE) for the network's predictions
+double fossil_jellyfish_calculate_error(fossil_jellyfish_network_t* network, double* expected_output) {
+    if (!network || !expected_output) {
+        fprintf(stderr, "Invalid arguments to fossil_jellyfish_calculate_error\n");
+        return -1;
+    }
+
+    fossil_jellyfish_layer_t* output_layer = network->layers[network->num_layers - 1];
+    double error = 0;
+
+    for (int32_t i = 0; i < output_layer->num_neurons; i++) {
+        double diff = expected_output[i] - output_layer->outputs[i];
+        error += diff * diff;
+    }
+
+    return error / output_layer->num_neurons;
+}
+
+// Updates the learning rate dynamically based on decay
+double fossil_jellyfish_update_learning_rate(double learning_rate, int32_t epoch, double decay_rate) {
+    if (learning_rate <= 0 || decay_rate < 0) {
+        fprintf(stderr, "Invalid arguments to fossil_jellyfish_update_learning_rate\n");
+        return learning_rate;
+    }
+    return learning_rate / (1 + decay_rate * epoch);
+}
+
+// Clips the gradients to avoid exploding gradients during backpropagation
+void fossil_jellyfish_clip_gradients(fossil_jellyfish_layer_t* layer, double clip_value) {
+    if (!layer || clip_value <= 0) {
+        fprintf(stderr, "Invalid arguments to fossil_jellyfish_clip_gradients\n");
+        return;
+    }
+
+    for (int32_t i = 0; i < layer->num_neurons; i++) {
+        if (layer->deltas[i] > clip_value) {
+            layer->deltas[i] = clip_value;
+        } else if (layer->deltas[i] < -clip_value) {
+            layer->deltas[i] = -clip_value;
+        }
+    }
 }
 
 // Forward pass through the network
