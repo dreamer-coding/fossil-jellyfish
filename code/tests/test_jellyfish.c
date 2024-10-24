@@ -118,12 +118,67 @@ FOSSIL_TEST(test_load_network) {
     fossil_jellyfish_free_network(network);
 }
 
+// Test case for applying dropout
+FOSSIL_TEST(test_apply_dropout) {
+    fossil_jellyfish_layer_t* layer = (fossil_jellyfish_layer_t*)malloc(sizeof(fossil_jellyfish_layer_t));
+    layer->num_neurons = NUM_NEURONS_LAYER1;
+    layer->outputs = (double*)malloc(NUM_NEURONS_LAYER1 * sizeof(double));
+
+    // Initialize outputs
+    for (int i = 0; i < layer->num_neurons; i++) {
+        layer->outputs[i] = 1.0;
+    }
+
+    // Apply dropout with a rate of 0.5
+    fossil_jellyfish_apply_dropout(layer, 0.5);
+
+    // Check that some neurons are dropped (output is zero)
+    int dropout_applied = 0;
+    for (int i = 0; i < layer->num_neurons; i++) {
+        if (layer->outputs[i] == 0.0) {
+            dropout_applied = 1;
+            break;
+        }
+    }
+    ASSUME_ITS_TRUE(dropout_applied);
+
+    // Clean up
+    free(layer->outputs);
+    free(layer);
+}
+
+// Test case for clipping gradients
+FOSSIL_TEST(test_clip_gradients) {
+    fossil_jellyfish_layer_t* layer = (fossil_jellyfish_layer_t*)malloc(sizeof(fossil_jellyfish_layer_t));
+    layer->num_neurons = NUM_NEURONS_LAYER1;
+    layer->deltas = (double*)malloc(NUM_NEURONS_LAYER1 * sizeof(double));
+
+    // Initialize gradients (deltas)
+    for (int i = 0; i < layer->num_neurons; i++) {
+        layer->deltas[i] = (i % 2 == 0) ? 5.0 : -5.0;
+    }
+
+    // Clip gradients to a max absolute value of 2.0
+    fossil_jellyfish_clip_gradients(layer, 2.0);
+
+    // Ensure gradients are clipped
+    for (int i = 0; i < layer->num_neurons; i++) {
+        ASSUME_ITS_TRUE(layer->deltas[i] <= 2.0 && layer->deltas[i] >= -2.0);
+    }
+
+    // Clean up
+    free(layer->deltas);
+    free(layer);
+}
+
 // * * * * * * * * * * * * * * * * * * * * * * * *
-// * Fossil Logic Test Pool
+// * Fossil Logic Test Pool (Updated)
 // * * * * * * * * * * * * * * * * * * * * * * * *
 
 FOSSIL_TEST_GROUP(jellyfish_tests) {
     ADD_TEST(test_create_network);
     ADD_TEST(test_save_network);
     ADD_TEST(test_load_network);
+    ADD_TEST(test_apply_dropout);
+    ADD_TEST(test_clip_gradients);
 }
