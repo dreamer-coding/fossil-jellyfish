@@ -19,13 +19,9 @@ void fossil_jellyfish_initialize(jellyfish_ai_t* ai, const char* personality) {
         fprintf(stderr, "Error: AI structure is NULL during initialization.\n");
         return;
     }
-    ai->memory_count = 0;
-    ai->interaction_count = 0;
-    ai->reasoning_count = 0;
-    ai->learning_count = 0;
     strncpy(ai->personality, personality, MAX_INPUT_SIZE);
     ai->is_initialized = true;
-    printf("Jellyfish AI initialized with personality: %s\n", ai->personality);
+    printf("Jellyfish AI initialized with personality: %s\n", personality);
 }
 
 // Store memory with key existence check
@@ -34,21 +30,20 @@ void fossil_jellyfish_store_memory(jellyfish_ai_t* ai, const char* key, const ch
         fprintf(stderr, "Error: AI structure is NULL during memory storage.\n");
         return;
     }
+    if (ai->memory_count >= MAX_MEMORY_SIZE) {
+        fprintf(stderr, "Error: Memory storage limit reached.\n");
+        return;
+    }
     for (int i = 0; i < ai->memory_count; i++) {
         if (strcmp(ai->memory[i].key, key) == 0) {
-            strncpy(ai->memory[i].value, value, MAX_MEMORY_SIZE);
-            printf("Memory updated: [%s] -> %s\n", key, value);
+            fprintf(stderr, "Warning: Memory key '%s' already exists.\n", key);
             return;
         }
-    }
-    if (ai->memory_count >= MAX_MEMORY_SIZE) {
-        fprintf(stderr, "Error: Memory limit reached. Cannot store more memory.\n");
-        return;
     }
     strncpy(ai->memory[ai->memory_count].key, key, MAX_INPUT_SIZE);
     strncpy(ai->memory[ai->memory_count].value, value, MAX_MEMORY_SIZE);
     ai->memory_count++;
-    printf("Memory stored: [%s] -> %s\n", key, value);
+    printf("Memory stored with key: %s\n", key);
 }
 
 // Retrieve memory
@@ -62,7 +57,6 @@ const char* fossil_jellyfish_retrieve_memory(jellyfish_ai_t* ai, const char* key
             return ai->memory[i].value;
         }
     }
-    fprintf(stderr, "Warning: Memory key '%s' not found.\n", key);
     return NULL;
 }
 

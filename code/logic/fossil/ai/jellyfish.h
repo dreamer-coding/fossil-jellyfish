@@ -48,7 +48,7 @@ typedef struct {
 } jellyfish_reasoning_t;
 
 typedef struct {
-    char concept[MAX_INPUT_SIZE];
+    char concepts[MAX_INPUT_SIZE];
     char details[MAX_RESPONSE_SIZE];
 } jellyfish_learning_t;
 

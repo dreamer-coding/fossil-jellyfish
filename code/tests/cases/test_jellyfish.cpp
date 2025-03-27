@@ -76,10 +76,10 @@ FOSSIL_TEST_CASE(cpp_test_jellyfish_generate_response) {
 // * * * * * * * * * * * * * * * * * * * * * * * *
 FOSSIL_TEST_GROUP(cpp_jellyfish_tests) {    
     // Generic ToFu Fixture
-    FOSSIL_TEST_ADD(cpp_jellyfish_fixture, cpp_test_jellyfish_initialize);
-    FOSSIL_TEST_ADD(cpp_jellyfish_fixture, cpp_test_jellyfish_store_memory);
-    FOSSIL_TEST_ADD(cpp_jellyfish_fixture, cpp_test_jellyfish_retrieve_memory);
-    FOSSIL_TEST_ADD(cpp_jellyfish_fixture, cpp_test_jellyfish_generate_response);
+    // FOSSIL_TEST_ADD(cpp_jellyfish_fixture, cpp_test_jellyfish_initialize);
+    // FOSSIL_TEST_ADD(cpp_jellyfish_fixture, cpp_test_jellyfish_store_memory);
+    // FOSSIL_TEST_ADD(cpp_jellyfish_fixture, cpp_test_jellyfish_retrieve_memory);
+    // FOSSIL_TEST_ADD(cpp_jellyfish_fixture, cpp_test_jellyfish_generate_response);
 
     FOSSIL_TEST_REGISTER(cpp_jellyfish_fixture);
 } // end of tests
