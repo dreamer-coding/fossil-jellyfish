@@ -177,5 +177,15 @@ bool fossil_jellyfish_is_initialized(jellyfish_ai_t* ai) {
     if (ai == NULL) {
         return false; // Handle error appropriately
     }
-    return ai->is_initialized;
+    // Additional validation: check if personality is set and memory_count is in valid range
+    if (!ai->is_initialized) {
+        return false;
+    }
+    if (ai->personality[0] == '\0') {
+        return false;
+    }
+    if (ai->memory_count < 0 || ai->memory_count > MAX_MEMORY_SIZE) {
+        return false;
+    }
+    return true;
 }
