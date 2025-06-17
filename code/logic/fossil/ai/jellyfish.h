@@ -224,7 +224,12 @@ namespace ai {
     private:
         jellyfish_ai_t ai_;
     public:
-        // Constructor: Initialize with personality
+        /**
+         * @brief Constructor to initialize the Jellyfish AI with a personality.
+         *
+         * @param personality String representing the AI's personality.
+         * @throws std::runtime_error if initialization fails.
+         */
         Jellyfish(const std::string& personality) {
             fossil_jellyfish_initialize(&ai_, personality.c_str());
             if (!fossil_jellyfish_is_initialized(&ai_)) {
@@ -232,65 +237,128 @@ namespace ai {
             }
         }
 
-        // Store a key-value pair in memory
+        /**
+         * @brief Destructor to clean up the Jellyfish AI.
+         */
+        ~Jellyfish() {
+            // No explicit cleanup needed as the C API handles it
+            // However, you could call reset() if you want to ensure a clean state
+            fossil_jellyfish_reset(&ai_);
+        }
+
+        /**
+         * @brief Store a key-value pair in the AI's memory.
+         *
+         * @param key Key string to identify the memory.
+         * @param value Value string to store.
+         */
         void store_memory(const std::string& key, const std::string& value) {
             fossil_jellyfish_store_memory(&ai_, key.c_str(), value.c_str());
         }
 
-        // Retrieve a value from memory by key
+        /**
+         * @brief Retrieve a value from the AI's memory by key.
+         *
+         * @param key Key string to look up.
+         * @return Value string if found, empty string otherwise.
+         */
         std::string retrieve_memory(const std::string& key) {
             const char* value = fossil_jellyfish_retrieve_memory(&ai_, key.c_str());
             return value ? std::string(value) : std::string();
         }
 
-        // Generate a response based on user input
+        /**
+         * @brief Generate a response based on user input.
+         *
+         * @param user_input Input string from the user.
+         * @return AI's response string.
+         */
         std::string generate_response(const std::string& user_input) {
             char buffer[MAX_RESPONSE_SIZE] = {0};
             fossil_jellyfish_generate_response(&ai_, user_input.c_str(), buffer);
             return std::string(buffer);
         }
 
-        // Set the context for the AI
+        /**
+         * @brief Set the context for the AI.
+         *
+         * @param context String representing the new context.
+         */
         void set_context(const std::string& context) {
             fossil_jellyfish_set_context(&ai_, context.c_str());
         }
 
-        // Perform reasoning based on user input
+        /**
+         * @brief Perform reasoning based on user input.
+         *
+         * @param user_input Input string from the user.
+         * @param reasoning Output structure for reasoning results.
+         */
         void perform_reasoning(const std::string& user_input, jellyfish_reasoning_t& reasoning) {
             fossil_jellyfish_perform_reasoning(&ai_, user_input.c_str(), &reasoning);
         }
 
-        // Learn from user input
+        /**
+         * @brief Learn from user input.
+         *
+         * @param user_input Input string from the user.
+         * @param learning Output structure for learning results.
+         */
         void learn(const std::string& user_input, jellyfish_learning_t& learning) {
             fossil_jellyfish_learn(&ai_, user_input.c_str(), &learning);
         }
 
-        // Reset the AI to its initial state
+        /**
+         * @brief Reset the AI to its initial state.
+         */
         void reset() {
             fossil_jellyfish_reset(&ai_);
         }
 
-        // Export the AI's memory to a file
+        /**
+         * @brief Export the AI's memory to a file.
+         *
+         * @param filename Name of the file to export to.
+         * @return true if successful, false otherwise.
+         */
         bool export_memory(const std::string& filename) {
             return fossil_jellyfish_export_memory(&ai_, filename.c_str());
         }
 
-        // Import memory into the AI from a file
+        /**
+         * @brief Import memory into the AI from a file.
+         *
+         * @param filename Name of the file to import from.
+         * @return true if successful, false otherwise.
+         */
         bool import_memory(const std::string& filename) {
             return fossil_jellyfish_import_memory(&ai_, filename.c_str());
         }
 
-        // Get the current number of memories stored
+        /**
+         * @brief Get the current number of memories stored.
+         *
+         * @return Number of memories stored.
+         */
         int memory_count() {
             return fossil_jellyfish_memory_count(&ai_);
         }
 
-        // Remove a memory entry by key
+        /**
+         * @brief Remove a memory entry by key.
+         *
+         * @param key Key string to identify the memory.
+         * @return true if successful, false otherwise.
+         */
         bool remove_memory(const std::string& key) {
             return fossil_jellyfish_remove_memory(&ai_, key.c_str());
         }
 
-        // List all memory keys
+        /**
+         * @brief List all memory keys.
+         *
+         * @return Vector of all memory keys.
+         */
         std::vector<std::string> list_memory_keys() {
             char keys[MAX_MEMORY_SIZE][MAX_INPUT_SIZE] = {{0}};
             int count = fossil_jellyfish_list_memory_keys(&ai_, keys, MAX_MEMORY_SIZE);
@@ -301,19 +369,31 @@ namespace ai {
             return result;
         }
 
-        // Get the AI's current context
+        /**
+         * @brief Get the AI's current context.
+         *
+         * @return The context string of the AI.
+         */
         std::string get_context() {
             const char* context = fossil_jellyfish_get_context(&ai_);
             return context ? std::string(context) : std::string();
         }
 
-        // Get the AI's current personality
+        /**
+         * @brief Get the AI's current personality.
+         *
+         * @return The personality string of the AI.
+         */
         std::string get_personality() {
             const char* personality = fossil_jellyfish_get_personality(&ai_);
             return personality ? std::string(personality) : std::string();
         }
 
-        // Check if the AI is initialized
+        /**
+         * @brief Check if the AI is initialized.
+         *
+         * @return true if initialized, false otherwise.
+         */
         bool is_initialized() {
             return fossil_jellyfish_is_initialized(&ai_);
         }
