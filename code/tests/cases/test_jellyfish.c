@@ -118,7 +118,7 @@ FOSSIL_TEST_CASE(c_test_jellyfish_get_personality) {
 
 FOSSIL_TEST_CASE(c_test_jellyfish_is_initialized) {
     jellyfish_ai_t ai;
-    ASSUME_ITS_TRUE(!fossil_jellyfish_is_initialized(&ai));
+    ASSUME_NOT_TRUE(fossil_jellyfish_is_initialized(&ai));
     fossil_jellyfish_initialize(&ai, "aware");
     ASSUME_ITS_TRUE(fossil_jellyfish_is_initialized(&ai));
 }
