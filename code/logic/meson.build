@@ -1,6 +1,6 @@
 dir = include_directories('.')
 
-fossil_fish_lib = library('fossil-jellyfish',
+fossil_fish_lib = static_library('fossil-jellyfish',
     files('jellyfish.c'),
     install: true,
     include_directories: dir)
