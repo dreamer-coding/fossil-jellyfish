@@ -17,14 +17,30 @@ void fossil_jellyfish_initialize(jellyfish_ai_t* ai, const char* personality) {
     if (ai == NULL || personality == NULL) {
         return; // Handle error appropriately
     }
-    // Handle possible invalid signature (siginvalid) by resetting all fields
+    // Reset all fields to zero
     memset(ai, 0, sizeof(jellyfish_ai_t));
-    strncpy(ai->personality, personality, MAX_INPUT_SIZE - 1);
-    ai->personality[MAX_INPUT_SIZE - 1] = '\0'; // Ensure null termination
+
+    // Initialize all memory slots
+    for (int i = 0; i < MAX_MEMORY_SIZE; ++i) {
+        ai->memory[i].key[0] = '\0';
+        ai->memory[i].value[0] = '\0';
+        ai->interactions[i].user_input[0] = '\0';
+        ai->interactions[i].ai_response[0] = '\0';
+        ai->reasoning[i].hypothesis[0] = '\0';
+        ai->reasoning[i].evidence[0] = '\0';
+        ai->learning[i].concepts[0] = '\0';
+        ai->learning[i].details[0] = '\0';
+    }
+
     ai->memory_count = 0;
     ai->interaction_count = 0;
     ai->reasoning_count = 0;
     ai->learning_count = 0;
+
+    ai->context[0] = '\0';
+    strncpy(ai->personality, personality, MAX_INPUT_SIZE - 1);
+    ai->personality[MAX_INPUT_SIZE - 1] = '\0'; // Ensure null termination
+
     ai->is_initialized = true;
 }
 
