@@ -76,6 +76,11 @@ FOSSIL_TEST_CASE(c_test_jellyfish_memory_count) {
     fossil_jellyfish_store_memory(&ai, "a", "1");
     fossil_jellyfish_store_memory(&ai, "b", "2");
     ASSUME_ITS_TRUE(fossil_jellyfish_memory_count(&ai) == 2);
+
+    // Handle siginvalid: pass NULL and uninitialized ai
+    ASSUME_ITS_TRUE(fossil_jellyfish_memory_count(NULL) == -1);
+    jellyfish_ai_t ai_invalid = {0};
+    ASSUME_ITS_TRUE(fossil_jellyfish_memory_count(&ai_invalid) == -1);
 }
 
 FOSSIL_TEST_CASE(c_test_jellyfish_remove_memory) {
@@ -87,6 +92,11 @@ FOSSIL_TEST_CASE(c_test_jellyfish_remove_memory) {
     ASSUME_ITS_TRUE(fossil_jellyfish_retrieve_memory(&ai, "foo") == NULL);
     bool not_found = fossil_jellyfish_remove_memory(&ai, "baz");
     ASSUME_ITS_TRUE(!not_found);
+
+    // Handle siginvalid: pass NULL and uninitialized ai
+    ASSUME_ITS_TRUE(!fossil_jellyfish_remove_memory(NULL, "foo"));
+    jellyfish_ai_t ai_invalid = {0};
+    ASSUME_ITS_TRUE(!fossil_jellyfish_remove_memory(&ai_invalid, "foo"));
 }
 
 FOSSIL_TEST_CASE(c_test_jellyfish_list_memory_keys) {
@@ -99,6 +109,11 @@ FOSSIL_TEST_CASE(c_test_jellyfish_list_memory_keys) {
     ASSUME_ITS_TRUE(count == 2);
     ASSUME_ITS_TRUE((strcmp(keys[0], "k1") == 0 && strcmp(keys[1], "k2") == 0) ||
                     (strcmp(keys[0], "k2") == 0 && strcmp(keys[1], "k1") == 0));
+
+    // Handle siginvalid: pass NULL and uninitialized ai
+    ASSUME_ITS_TRUE(fossil_jellyfish_list_memory_keys(NULL, keys, 4) == -1);
+    jellyfish_ai_t ai_invalid = {0};
+    ASSUME_ITS_TRUE(fossil_jellyfish_list_memory_keys(&ai_invalid, keys, 4) == -1);
 }
 
 FOSSIL_TEST_CASE(c_test_jellyfish_get_context) {
@@ -107,6 +122,11 @@ FOSSIL_TEST_CASE(c_test_jellyfish_get_context) {
     fossil_jellyfish_set_context(&ai, "deep sea");
     const char* ctx = fossil_jellyfish_get_context(&ai);
     ASSUME_ITS_TRUE(strcmp(ctx, "deep sea") == 0);
+
+    // Handle siginvalid: pass NULL and uninitialized ai
+    ASSUME_ITS_TRUE(fossil_jellyfish_get_context(NULL) == NULL);
+    jellyfish_ai_t ai_invalid = {0};
+    ASSUME_ITS_TRUE(fossil_jellyfish_get_context(&ai_invalid) == NULL);
 }
 
 FOSSIL_TEST_CASE(c_test_jellyfish_get_personality) {
@@ -114,6 +134,11 @@ FOSSIL_TEST_CASE(c_test_jellyfish_get_personality) {
     fossil_jellyfish_initialize(&ai, "quirky");
     const char* pers = fossil_jellyfish_get_personality(&ai);
     ASSUME_ITS_TRUE(strcmp(pers, "quirky") == 0);
+
+    // Handle siginvalid: pass NULL and uninitialized ai
+    ASSUME_ITS_TRUE(fossil_jellyfish_get_personality(NULL) == NULL);
+    jellyfish_ai_t ai_invalid = {0};
+    ASSUME_ITS_TRUE(fossil_jellyfish_get_personality(&ai_invalid) == NULL);
 }
 
 FOSSIL_TEST_CASE(c_test_jellyfish_is_initialized) {
@@ -121,6 +146,11 @@ FOSSIL_TEST_CASE(c_test_jellyfish_is_initialized) {
     ASSUME_NOT_TRUE(fossil_jellyfish_is_initialized(&ai));
     fossil_jellyfish_initialize(&ai, "aware");
     ASSUME_ITS_TRUE(fossil_jellyfish_is_initialized(&ai));
+
+    // Handle siginvalid: pass NULL and uninitialized ai
+    ASSUME_NOT_TRUE(fossil_jellyfish_is_initialized(NULL));
+    jellyfish_ai_t ai_invalid = {0};
+    ASSUME_NOT_TRUE(fossil_jellyfish_is_initialized(&ai_invalid));
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * *
