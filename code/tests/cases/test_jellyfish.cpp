@@ -65,7 +65,7 @@ FOSSIL_TEST_CASE(cpp_test_jellyfish_export_import_memory) {
     ASSUME_ITS_TRUE(imported);
     ASSUME_ITS_TRUE(ai2.retrieve_memory("k1") == "v1");
     ASSUME_ITS_TRUE(ai2.retrieve_memory("k2") == "v2");
-    remove("test_mem.txt");
+    //remove("test_mem.txt");
 }
 
 FOSSIL_TEST_CASE(cpp_test_jellyfish_memory_count) {

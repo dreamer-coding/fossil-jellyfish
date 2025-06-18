@@ -65,7 +65,7 @@ FOSSIL_TEST_CASE(c_test_jellyfish_export_import_memory) {
     ASSUME_ITS_TRUE(imported);
     ASSUME_ITS_TRUE(strcmp(fossil_jellyfish_retrieve_memory(&ai2, "k1"), "v1") == 0);
     ASSUME_ITS_TRUE(strcmp(fossil_jellyfish_retrieve_memory(&ai2, "k2"), "v2") == 0);
-    remove("test_mem.txt");
+    //remove("test_mem.txt");
 }
 
 FOSSIL_TEST_CASE(c_test_jellyfish_memory_count) {
