@@ -128,11 +128,18 @@ bool fossil_jellyfish_export_memory(jellyfish_ai_t* ai, const char* filename) {
     if (file == NULL) {
         return false; // Failed to open file
     }
+    bool success = true;
     for (int i = 0; i < ai->memory_count; i++) {
-        fprintf(file, "%s:%s\n", ai->memory[i].key, ai->memory[i].value);
+        if (fprintf(file, "%s:%s\n", ai->memory[i].key, ai->memory[i].value) < 0) {
+            success = false;
+            break;
+        }
+    }
+    if (fflush(file) != 0) {
+        success = false;
     }
     fclose(file);
-    return true; // Successfully exported memory
+    return success; // Return true only if all writes succeeded and file was flushed
 }
 
 bool fossil_jellyfish_import_memory(jellyfish_ai_t* ai, const char* filename) {
@@ -145,7 +152,13 @@ bool fossil_jellyfish_import_memory(jellyfish_ai_t* ai, const char* filename) {
     }
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
-        return false; // Failed to open file
+        // File does not exist, create a new blank memory file
+        file = fopen(filename, "w");
+        if (file != NULL) {
+            fclose(file);
+        }
+        // Start with blank memory (already blank after initialization)
+        return true;
     }
     char line[512];
     while (fgets(line, sizeof(line), file)) {
