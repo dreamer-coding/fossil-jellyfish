@@ -52,6 +52,15 @@ void fossil_jellyfish_store_memory(jellyfish_ai_t* ai, const char* key, const ch
     if (!ai->is_initialized) {
         return; // Do not store memory if AI is not properly initialized
     }
+    // Check if the key already exists; if so, update the value
+    for (int i = 0; i < ai->memory_count; ++i) {
+        if (strncmp(ai->memory[i].key, key, MAX_INPUT_SIZE) == 0) {
+            strncpy(ai->memory[i].value, value, MAX_MEMORY_SIZE - 1);
+            ai->memory[i].value[MAX_MEMORY_SIZE - 1] = '\0'; // Ensure null termination
+            return;
+        }
+    }
+    // Otherwise, add new memory if there is space
     if (ai->memory_count < MAX_MEMORY_SIZE) {
         strncpy(ai->memory[ai->memory_count].key, key, MAX_INPUT_SIZE - 1);
         ai->memory[ai->memory_count].key[MAX_INPUT_SIZE - 1] = '\0'; // Ensure null termination
@@ -133,13 +142,13 @@ void fossil_jellyfish_reset(jellyfish_ai_t* ai) {
 }
 
 bool fossil_jellyfish_export_memory(jellyfish_ai_t* ai, const char* filename) {
-    if (ai == NULL || filename == NULL) {
-        return false; // Handle error appropriately
-    }
+    // if (ai == NULL || filename == NULL) {
+    //     return false; // Handle error appropriately
+    // }
     // Handle possible invalid signature (siginvalid)
-    if (!ai->is_initialized) {
-        return false; // Do not export memory if AI is not properly initialized
-    }
+    // if (!ai->is_initialized) {
+    //     return false; // Do not export memory if AI is not properly initialized
+    // }
     FILE* file = fopen(filename, "w");
     if (file == NULL) {
         return false; // Failed to open file
@@ -159,13 +168,13 @@ bool fossil_jellyfish_export_memory(jellyfish_ai_t* ai, const char* filename) {
 }
 
 bool fossil_jellyfish_import_memory(jellyfish_ai_t* ai, const char* filename) {
-    if (ai == NULL || filename == NULL) {
-        return false; // Handle error appropriately
-    }
-    // Handle possible invalid signature (siginvalid)
-    if (!ai->is_initialized) {
-        return false; // Do not import memory if AI is not properly initialized
-    }
+    // if (ai == NULL || filename == NULL) {
+    //     return false; // Handle error appropriately
+    // }
+    // // Handle possible invalid signature (siginvalid)
+    // if (!ai->is_initialized) {
+    //     return false; // Do not import memory if AI is not properly initialized
+    // }
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
         // File does not exist, create a new blank memory file
